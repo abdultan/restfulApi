@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Ticket;
+use App\Models\Rezervation;
+use App\Models\Seat;
 
 class TicketController extends Controller
 {
@@ -13,7 +16,9 @@ class TicketController extends Controller
      */
     public function index()
     {
-        //
+        $tickets = Ticket::with(['rezervation','seat'])->get();
+
+        return response()->json($tickets);
     }
 
     /**
@@ -35,7 +40,11 @@ class TicketController extends Controller
      */
     public function show($id)
     {
-        //
+        $ticket = Ticket::with(['rezervation', 'seat'])->find($id);
+        if (!$ticket) {
+            return response()->json(['message' => 'Ticket not found'], 404);
+        }
+        return response()->json($ticket);
     }
 
     /**

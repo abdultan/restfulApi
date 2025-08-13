@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignIdFor(\App\Models\Event::class)->constrained()->onDelete('cascade');
             $table->string('status')->default('pending');
             $table->string('total_amount');
-            $table->string('expires_at');
+            $table->dateTime('expires_at');
             $table->timestamps();
         });
     }

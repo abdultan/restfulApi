@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EventController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\VenueController;
 use App\Http\Controllers\RezervationController;
 use App\Http\Controllers\RezervationItemController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,15 +23,24 @@ use App\Http\Controllers\RezervationItemController;
 */
 
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+Route::apiResources([
+    'events'=> EventController::class,
+    'seats'=> SeatController::class,
+    'tickets'=> TicketController::class,
+    'venues'=> VenueController::class,
+    'reservations'=> RezervationController::class,
+    'rezervation_items'=> RezervationItemController::class,
+    'user'=> UserController::class,
+]);
 
-Route::apiResource('/events', EventController::class);
-Route::apiResource('/seats', SeatController::class);
-Route::apiResource('/tickets', TicketController::class);
-Route::apiResource('/venues', VenueController::class);
-Route::apiResource('/reservations', RezervationController::class);
-Route::apiResource('/rezervation_items', RezervationItemController::class);
+Route::post('auth/register',[AuthController::class,'register']);
+Route::post('auth/login',[AuthController::class,'login']);
+Route::post('auth/logout',[AuthController::class,'logout']);
+Route::post('auth/refresh',[AuthController::class,'refresh']);
+
+
 
 

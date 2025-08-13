@@ -9,11 +9,7 @@ class Venue extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'name',
-        'address', 
-        'capacity'
-    ];
+    protected $guarded = [];
 
     public function events()
     {

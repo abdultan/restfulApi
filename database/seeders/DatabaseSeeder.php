@@ -19,9 +19,7 @@ class DatabaseSeeder extends Seeder
             EventSeeder::class,
             SeatSeeder::class,
             UserSeeder::class,
-            RezervationSeeder::class,
-            TicketSeeder::class,
-            RezervationItemSeeder::class
+            RezervationAndItemSeeder::class,
         ]);
     }
 }

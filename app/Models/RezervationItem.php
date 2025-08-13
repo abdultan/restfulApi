@@ -17,4 +17,5 @@ class RezervationItem extends Model
     public function seat(){
         return $this->belongsTo(Seat::class);
     }
+
 }

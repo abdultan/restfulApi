@@ -18,7 +18,6 @@ class RezervationFactory extends Factory
     {
         return [
             'status' => $this->faker->randomElement(['pending', 'confirmed', 'cancelled']),
-            'total_amount' => 0,
             'expires_at' => now()->addMinutes(rand(30,120))
         ];
     }

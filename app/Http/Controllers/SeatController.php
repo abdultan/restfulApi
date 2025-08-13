@@ -3,13 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Seat;
-use App\Models\Venue;
-use App\Models\Event;
-use App\Models\Ticket;
-use App\Models\Rezervation;
-use App\Models\RezervationItem;
-
 
 class SeatController extends Controller
 {
