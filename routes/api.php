@@ -41,6 +41,12 @@ Route::post('auth/login',[AuthController::class,'login']);
 Route::post('auth/logout',[AuthController::class,'logout']);
 Route::post('auth/refresh',[AuthController::class,'refresh']);
 
+Route::middleware('auth:api')->group(function () {
+    Route::get('events/{id}/seats', [SeatController::class, 'byEvent']);
+    Route::get('venues/{id}/seats', [SeatController::class, 'byVenue']);
+    Route::post('seats/block',[SeatController::class,'block']);
+    Route::delete('seats/release',[SeatController::class,'release']);
+});
 
 
 

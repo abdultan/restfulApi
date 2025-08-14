@@ -218,6 +218,8 @@ return [
     */
 
     'blacklist_enabled' => env('JWT_BLACKLIST_ENABLED', true),
+    'JWT_TTL' => 60,
+    
 
     /*
     | -------------------------------------------------------------------------
