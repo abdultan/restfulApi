@@ -26,15 +26,7 @@ use App\Http\Controllers\UserController;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
-Route::apiResources([
-    'events'=> EventController::class,
-    'seats'=> SeatController::class,
-    'tickets'=> TicketController::class,
-    'venues'=> VenueController::class,
-    'reservations'=> RezervationController::class,
-    'rezervation_items'=> RezervationItemController::class,
-    'user'=> UserController::class,
-]);
+
 
 Route::post('auth/register',[AuthController::class,'register']);
 Route::post('auth/login',[AuthController::class,'login']);
@@ -47,6 +39,18 @@ Route::middleware('auth:api')->group(function () {
     Route::post('seats/block',[SeatController::class,'block']);
     Route::delete('seats/release',[SeatController::class,'release']);
 });
+Route::middleware('auth:api')->group(function () {
+    Route::post('rezervations', [RezervationController::class,'store']);
+});
 
 
+Route::apiResources([
+    'events'=> EventController::class,
+    'seats'=> SeatController::class,
+    'tickets'=> TicketController::class,
+    'venues'=> VenueController::class,
+    'reservations'=> RezervationController::class,
+    'rezervation_items'=> RezervationItemController::class,
+    'user'=> UserController::class,
+]);
 

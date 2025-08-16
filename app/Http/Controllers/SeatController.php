@@ -40,6 +40,7 @@ class SeatController extends Controller
             ], 200);
         });
     }
+    
     public function release(SeatReleaseRequest $request): JsonResponse
     {
         $ids = $request->validated('seat_ids');
@@ -113,8 +114,4 @@ class SeatController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
-    {
-        //
-    }
 }
