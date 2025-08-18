@@ -20,20 +20,37 @@ class SeatController extends Controller
      */
     public function block(SeatBlockRequest $request){
         $ids = $request->validated('seat_ids');
+        $userId = $request->user()->id;
 
-        return DB::transaction(function () use ($ids) {
+        return DB::transaction(function () use ($ids,$userId) {
             $seats = Seat::whereIn('id', $ids)->lockForUpdate()->get();
 
             foreach ($seats as $s) {
-                if ($s->status !== Seat::STATUS_AVAILABLE) {
-                    return response()->json([
-                        'status'=> 'error',
-                        'message'=> "Seat {$s->id} is not available",
-                    ],409);
+                if ($s->status === Seat::STATUS_RESERVED && $s->reserved_until && $s->reserved_until->isPast()) {
+                    $s->update([
+                        'status'         => Seat::STATUS_AVAILABLE,
+                        'reserved_by'    => null,
+                        'reserved_until' => null,
+                    ]);
                 }
             }
-            Seat::whereIn('id', $ids)->update(['status' => Seat::STATUS_RESERVED]);
+            $seats = Seat::whereIn('id', $ids)->lockForUpdate()->get();
 
+            foreach ($seats as $s) {
+            if ($s->status !== Seat::STATUS_AVAILABLE) {
+                return response()->json([
+                    'status'=> 'error',
+                    'message'=> "Seat {$s->id} is not available",
+                ], 409);
+                }
+            }
+
+            Seat::whereIn('id', $ids)->update([
+                'status'         => Seat::STATUS_RESERVED,
+                'reserved_by'    => $userId,
+                'reserved_until' => now()->addMinutes(15),
+            ]);
+            
             return response()->json([
                 'status'           => 'success',
                 'blocked_seat_ids' => $seats->pluck('id')->values(),
@@ -44,10 +61,15 @@ class SeatController extends Controller
     public function release(SeatReleaseRequest $request): JsonResponse
     {
         $ids = $request->validated('seat_ids');
+        $userId = $request->user()->id;
 
         $affected = Seat::whereIn('id', $ids)
             ->where('status', Seat::STATUS_RESERVED)
-            ->update(['status' => Seat::STATUS_AVAILABLE]);
+            ->where('reserved_by', $userId)
+            ->update([
+                'status' => Seat::STATUS_AVAILABLE,
+                'reserved_by' => null,
+                'reserved_until' => null,]);
 
         return response()->json([
             'status'         => 'success',

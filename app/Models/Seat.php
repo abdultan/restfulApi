@@ -8,8 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 class Seat extends Model
 {
     use HasFactory;
-    protected $guarded = [];
-
+    protected $fillable = [
+        'venue_id',
+        'section',
+        'row',
+        'number',
+        'status',
+        'price',
+        'rezerved_by',
+        'rezerved_until',
+    ];
+    protected $casts = [
+        'reserved_until' => 'datetime',
+    ];
     public const STATUS_AVAILABLE = 'available';
     public const STATUS_RESERVED = 'reserved';
     public const STATUS_SOLD = 'sold';

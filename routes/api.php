@@ -41,6 +41,8 @@ Route::middleware('auth:api')->group(function () {
 });
 Route::middleware('auth:api')->group(function () {
     Route::post('rezervations', [RezervationController::class,'store']);
+    Route::post('rezervations/{id}/confirm', [RezervationController::class, 'confirm']);
+    Route::apiResource('rezervations', RezervationController::class)->only(['index','show','destroy']);
 });
 
 
@@ -49,7 +51,6 @@ Route::apiResources([
     'seats'=> SeatController::class,
     'tickets'=> TicketController::class,
     'venues'=> VenueController::class,
-    'reservations'=> RezervationController::class,
     'rezervation_items'=> RezervationItemController::class,
     'user'=> UserController::class,
 ]);
