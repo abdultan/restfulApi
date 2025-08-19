@@ -3,6 +3,11 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+<<<<<<< HEAD
+=======
+use Illuminate\Support\Carbon;
+use App\Models\Event;
+>>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
 
 class UpdateEventRequest extends FormRequest
 {
@@ -13,7 +18,11 @@ class UpdateEventRequest extends FormRequest
      */
     public function authorize()
     {
+<<<<<<< HEAD
         return false;
+=======
+        return true;
+>>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     }
 
     /**
@@ -24,7 +33,49 @@ class UpdateEventRequest extends FormRequest
     public function rules()
     {
         return [
+<<<<<<< HEAD
             //
         ];
     }
+=======
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'description' => ['sometimes', 'nullable', 'string'],
+            'venue_id' => ['sometimes', 'required', 'exists:venues,id'],
+            'start_date' => ['sometimes', 'date'],
+            'end_date' => ['sometimes', 'date'],
+            'status' => ['sometimes', 'nullable', 'in:draft,published,cancelled,archived'],
+        ];
+    }
+
+    public function withValidator($validator){
+        $validator->after(function ($v) {
+            /** @var Event $event */
+            $event = $this->route('event');
+
+            if (!$event) {
+                return;
+            }
+
+            // venue kilidi:
+            if ($this->filled('venue_id') && $event->status === 'published' && $this->venue_id != $event->venue_id) {
+                $v->errors()->add('venue_id', 'Published etkinlikte venue değiştirilemez.');
+            }
+
+            // tarihi geçmişe itmeyelim:
+            if ($this->filled('start_date') && now()->gt(new Carbon($this->start_date))) {
+                $v->errors()->add('start_date', 'Start geçmiş bir zamana çekilemez.');
+            }
+
+            // durum geçiş kuralı örneği:
+            if ($this->filled('status')) {
+                $from = $event->status;
+                $to   = $this->status;
+                $illegal = $from === 'archived' && $to === 'published';
+                if ($illegal) {
+                    $v->errors()->add('status', 'Archived -> Published geçişine izin yok.');
+                }
+            }
+        });
+    }
+>>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
 }

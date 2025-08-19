@@ -8,6 +8,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
+<<<<<<< HEAD
+=======
+use App\Models\Rezervation;
+
+>>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -39,6 +44,14 @@ class User extends Authenticatable implements JWTSubject
         'email_verified_at' => 'datetime',
     ];
 
+<<<<<<< HEAD
+=======
+    public function isAdmin(): bool
+    {
+        return ($this->role ?? 'user') === 'admin';
+    }
+
+>>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     // Rest omitted for brevity
 
     /**
@@ -61,7 +74,12 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
+<<<<<<< HEAD
     public function rezervation(){
         return $this->HasMany(User::Class);
+=======
+    public function rezervations(){
+        return $this->hasMany(Rezervation::class);
+>>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     }
 }
