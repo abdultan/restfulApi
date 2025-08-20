@@ -2,12 +2,6 @@
 
 namespace App\Http\Controllers;
 
-<<<<<<< HEAD
-use Illuminate\Http\Request;
-use App\Models\Ticket;
-use App\Models\Rezervation;
-use App\Models\Seat;
-=======
 use App\Http\Requests\TicketTransferRequest;
 use App\Http\Requests\TicketCancelRequest;
 use App\Models\Ticket;
@@ -19,7 +13,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
 
 class TicketController extends Controller
 {
@@ -28,13 +21,6 @@ class TicketController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-<<<<<<< HEAD
-    public function index()
-    {
-        $tickets = Ticket::with(['rezervation','seat'])->get();
-
-        return response()->json($tickets);
-=======
     public function index(Request $request): JsonResponse
     {
         $userId = $request->user()->id;
@@ -52,7 +38,6 @@ class TicketController extends Controller
 
         $tickets = $q->latest()->paginate(10);
         return response()->json($tickets, 200);
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     }
 
     /**
@@ -72,15 +57,6 @@ class TicketController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-<<<<<<< HEAD
-    public function show($id)
-    {
-        $ticket = Ticket::with(['rezervation', 'seat'])->find($id);
-        if (!$ticket) {
-            return response()->json(['message' => 'Ticket not found'], 404);
-        }
-        return response()->json($ticket);
-=======
     public function show(Request $request, int $id): JsonResponse
     {
         $userId = $request->user()->id;
@@ -208,33 +184,7 @@ class TicketController extends Controller
             'message' => 'Ticket cancelled',
             'data'    => $updated,
         ], Response::HTTP_OK);
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
-<<<<<<< HEAD
-=======
 
     /**
      * Download ticket as PDF (bonus)
@@ -268,5 +218,4 @@ class TicketController extends Controller
             'install' => 'composer require barryvdh/laravel-dompdf && php artisan vendor:publish --provider="Barryvdh\\DomPDF\\ServiceProvider"'
         ], Response::HTTP_NOT_IMPLEMENTED);
     }
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
 }

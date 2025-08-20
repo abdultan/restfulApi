@@ -3,11 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-<<<<<<< HEAD
-=======
 use Illuminate\Support\Carbon;
 use App\Models\Event;
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
 
 class UpdateEventRequest extends FormRequest
 {
@@ -18,11 +15,7 @@ class UpdateEventRequest extends FormRequest
      */
     public function authorize()
     {
-<<<<<<< HEAD
-        return false;
-=======
         return true;
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     }
 
     /**
@@ -33,11 +26,6 @@ class UpdateEventRequest extends FormRequest
     public function rules()
     {
         return [
-<<<<<<< HEAD
-            //
-        ];
-    }
-=======
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'description' => ['sometimes', 'nullable', 'string'],
             'venue_id' => ['sometimes', 'required', 'exists:venues,id'],
@@ -77,5 +65,4 @@ class UpdateEventRequest extends FormRequest
             }
         });
     }
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
 }

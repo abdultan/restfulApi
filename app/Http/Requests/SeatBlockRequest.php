@@ -55,14 +55,9 @@ class SeatBlockRequest extends FormRequest
      public function rules()
     {
         return [
-<<<<<<< HEAD
-            'seat_ids' =>['required','array','min:1','max:100'],
-            'seat_ids*'=> ['integer','distinct','exists:seats,id',],
-=======
             'event_id' => ['required','integer','exists:events,id'],
             'seat_ids' =>['required','array','min:1','max:100'],
             'seat_ids.*'=> ['integer','distinct','exists:seats,id',],
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
         ];
     }
 }

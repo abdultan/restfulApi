@@ -4,26 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-<<<<<<< HEAD
-=======
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
 
 class Event extends Model
 {
     use HasFactory;
 
-<<<<<<< HEAD
-    protected $guarded = [];
-=======
     protected $fillable = ['name', 'description', 'venue_id', 'start_date', 'end_date', 'status'];
 
 	protected $casts = [
 		'start_date' => 'datetime',
 		'end_date' => 'datetime',
 	];
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
 
     public function venue()
     {
@@ -34,8 +27,6 @@ class Event extends Model
     {
         return $this->hasMany(Rezervation::class);
     }
-<<<<<<< HEAD
-=======
     public function seats()
     {
         return $this->hasMany(Seat::class);
@@ -52,11 +43,6 @@ class Event extends Model
         return $query->where('start_date', '>=', now());
     }
 
-    public function scopePast($query)
-    {
-        return $query->where('start_date', '<', now());
-    }
-    
     public function scopeBetween($query, $start, $end)
     {
         return $query->whereBetween('start_date', [$start, $end]);
@@ -113,5 +99,4 @@ class Event extends Model
             }
         });
     }
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
 }

@@ -15,13 +15,8 @@ class Seat extends Model
         'number',
         'status',
         'price',
-<<<<<<< HEAD
-        'rezerved_by',
-        'rezerved_until',
-=======
         'reserved_by',
         'reserved_until',
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     ];
     protected $casts = [
         'reserved_until' => 'datetime',
@@ -34,9 +29,6 @@ class Seat extends Model
     }
 
     public function tickets(){
-<<<<<<< HEAD
-        return $this->hasOne(Ticket::class);
-=======
         return $this->hasMany(Ticket::class);
     }
     public function activeTicket()
@@ -46,6 +38,5 @@ class Seat extends Model
     public function rezervationItems()
     {
         return $this->hasMany(\App\Models\RezervationItem::class, 'seat_id', 'id');
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     }
 }

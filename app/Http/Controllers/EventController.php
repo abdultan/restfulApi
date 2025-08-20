@@ -2,12 +2,9 @@
 
 namespace App\Http\Controllers;
 
-<<<<<<< HEAD
-=======
 use App\Models\Event;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
 use Illuminate\Http\Request;
 
 class EventController extends Controller
@@ -15,13 +12,6 @@ class EventController extends Controller
     /**
      * Display a listing of the resource.
      *
-<<<<<<< HEAD
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-=======
      * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $req)
@@ -44,20 +34,11 @@ class EventController extends Controller
             ->paginate(10);
 
         return response()->json($events);
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     }
 
     /**
      * Store a newly created resource in storage.
      *
-<<<<<<< HEAD
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-=======
      * @param  StoreEventRequest  $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -65,41 +46,22 @@ class EventController extends Controller
     {
         $event = Event::create($request->validated());
         return response()->json($event->load('venue'), 201);
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     }
 
     /**
      * Display the specified resource.
      *
-<<<<<<< HEAD
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-=======
      * @param  Event  $event
      * @return \Illuminate\Http\JsonResponse
      */
     public function show(Event $event)
     {
         return response()->json($event->load('venue'));
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     }
 
     /**
      * Update the specified resource in storage.
      *
-<<<<<<< HEAD
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-=======
      * @param  UpdateEventRequest  $request
      * @param  Event  $event
      * @return \Illuminate\Http\JsonResponse
@@ -108,20 +70,11 @@ class EventController extends Controller
     {
         $event->update($request->validated());
         return response()->json($event->load('venue'));
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     }
 
     /**
      * Remove the specified resource from storage.
      *
-<<<<<<< HEAD
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-=======
      * @param  Event  $event
      * @return \Illuminate\Http\JsonResponse
      */
@@ -133,6 +86,5 @@ class EventController extends Controller
         }
         $event->delete();
         return response()->json(['message'=>'Event deleted.']);
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     }
 }

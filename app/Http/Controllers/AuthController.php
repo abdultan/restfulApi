@@ -8,11 +8,7 @@ use App\Http\Requests\RegistrationRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-<<<<<<< HEAD
-use Tymon\JWTAuth\Facedes\JWTAuth;
-=======
 use Tymon\JWTAuth\Facades\JWTAuth;
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
 use Tymon\JWTAuth\Exceptions\JWTException;
 use App\Http\Controllers\Controller;
 

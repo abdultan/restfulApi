@@ -37,11 +37,6 @@ class ExpireReservations extends Command
         foreach ($expired as $rez) {
             $rez->update(['status' => 'expired']);
 
-<<<<<<< HEAD
-            // ilgili koltukları serbest bırak
-            Seat::whereIn('id', $rez->items->pluck('seat_id'))
-                ->update(['status' => Seat::STATUS_AVAILABLE]);
-=======
             // ilgili koltukları serbest bırak ve hold bilgilerini temizle
             Seat::whereIn('id', $rez->items->pluck('seat_id'))
                 ->update([
@@ -49,7 +44,6 @@ class ExpireReservations extends Command
                     'reserved_by'    => null,
                     'reserved_until' => null,
                 ]);
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
 
             $this->info("Rezervation {$rez->id} expired and seats released.");
         }

@@ -8,11 +8,8 @@ use App\Http\Requests\SeatReleaseRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use App\Models\Seat;
-<<<<<<< HEAD
-=======
 use App\Models\Event;
 use App\Models\RezervationItem;
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
 
 
 
@@ -25,11 +22,6 @@ class SeatController extends Controller
      */
     public function block(SeatBlockRequest $request){
         $ids = $request->validated('seat_ids');
-<<<<<<< HEAD
-        $userId = $request->user()->id;
-
-        return DB::transaction(function () use ($ids,$userId) {
-=======
         $eventId = (int) $request->validated('event_id');
         $userId = $request->user()->id;
 
@@ -43,7 +35,6 @@ class SeatController extends Controller
         }
 
         return DB::transaction(function () use ($ids,$userId,$eventId) {
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
             $seats = Seat::whereIn('id', $ids)->lockForUpdate()->get();
 
             foreach ($seats as $s) {
@@ -58,13 +49,6 @@ class SeatController extends Controller
             $seats = Seat::whereIn('id', $ids)->lockForUpdate()->get();
 
             foreach ($seats as $s) {
-<<<<<<< HEAD
-            if ($s->status !== Seat::STATUS_AVAILABLE) {
-                return response()->json([
-                    'status'=> 'error',
-                    'message'=> "Seat {$s->id} is not available",
-                ], 409);
-=======
                 // Global hold kontrolü (yalnızca aktif hold'lar engeller)
                 if ($s->status === Seat::STATUS_RESERVED) {
                     return response()->json([
@@ -91,7 +75,7 @@ class SeatController extends Controller
                 $hasPending = $s->rezervationItems()
                     ->whereHas('rezervation', function($q) use ($eventId) {
                         $q->where('event_id',$eventId)
-                          ->where('status','pending')
+                          ->where('status', 'pending')
                           ->where('expires_at','>', now());
                     })
                     ->exists();
@@ -100,9 +84,8 @@ class SeatController extends Controller
                         'status'=> 'error',
                         'message'=> "Seat {$s->id} is reserved for this event",
                     ], 409);
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
                 }
-            }
+                }
 
             Seat::whereIn('id', $ids)->update([
                 'status'         => Seat::STATUS_RESERVED,
@@ -138,15 +121,6 @@ class SeatController extends Controller
 
     public function byEvent($eventId)
     {
-<<<<<<< HEAD
-    $seats = Seat::whereHas('venue.events', function ($query) use ($eventId) {
-        $query->where('events.id', $eventId);
-    })->get();
-
-    return response()->json($seats);
-    }
-
-=======
     $event = Event::with('venue')->findOrFail($eventId);
     $now = now();
 
@@ -186,7 +160,6 @@ class SeatController extends Controller
     }
 
 
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     public function byVenue($venueId)
     {
     $seats = Seat::where('venue_id', $venueId)->get();

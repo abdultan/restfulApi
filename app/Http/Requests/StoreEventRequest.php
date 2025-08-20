@@ -13,11 +13,7 @@ class StoreEventRequest extends FormRequest
      */
     public function authorize()
     {
-<<<<<<< HEAD
-        return false;
-=======
         return true;
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     }
 
     /**
@@ -28,16 +24,12 @@ class StoreEventRequest extends FormRequest
     public function rules()
     {
         return [
-<<<<<<< HEAD
-            //
-=======
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'venue_id' => ['required', 'exists:venues,id'],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after:start_date'],
             'status' => ['nullable', 'in:draft,published,cancelled,archived'],
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
         ];
     }
 }

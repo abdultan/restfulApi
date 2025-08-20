@@ -17,12 +17,6 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
-<<<<<<< HEAD
-        $reservedCount = Seat::where('status', 'reserved')->count();
-
-        User::factory($reservedCount)->create();
-
-=======
         // Create a default admin
         User::firstOrCreate(
             ['email' => 'admin@case.local'],
@@ -36,6 +30,5 @@ class UserSeeder extends Seeder
         $reservedCount = Seat::where('status', 'reserved')->count();
 
         User::factory($reservedCount)->create();
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     }
 }

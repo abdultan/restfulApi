@@ -45,8 +45,6 @@ class RezervationController extends Controller
     $eventId = (int) $request->validated('event_id');
     $seatIds = $request->validated('seat_ids');
 
-<<<<<<< HEAD
-=======
     // Etkinlik zamanı ve durumu kontrolü
     $evt = Event::findOrFail($eventId);
     if ($evt->status !== 'published') {
@@ -56,7 +54,6 @@ class RezervationController extends Controller
         return response()->json(['message' => 'Event already started'], 422);
     }
 
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
     return DB::transaction(function () use ($userId, $eventId, $seatIds) {
 
         $seats = Seat::whereIn('id', $seatIds)->lockForUpdate()->get();
@@ -172,8 +169,6 @@ class RezervationController extends Controller
         if ($rez->status !== 'pending') {
             return response()->json(['message' => 'Reservation is not pending'], 409);
         }
-<<<<<<< HEAD
-=======
         // Etkinlik başlamamış olmalı ve yayımlanmış olmalı
         if ($rez->event->status !== 'published') {
             return response()->json(['message' => 'Event is not published'], 422);
@@ -181,7 +176,6 @@ class RezervationController extends Controller
         if (now()->greaterThanOrEqualTo($rez->event->start_date)) {
             return response()->json(['message' => 'Event already started'], 422);
         }
->>>>>>> 6291303 (ticket ve event işlemleri yapıldı)
         if ($rez->expires_at && now()->greaterThan($rez->expires_at)) {
             return response()->json(['message' => 'Reservation expired'], 409);
         }
