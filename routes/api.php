@@ -26,6 +26,8 @@ Route::post('auth/login',[AuthController::class,'login']);
 Route::post('auth/logout',[AuthController::class,'logout']);
 Route::post('auth/refresh',[AuthController::class,'refresh']);
 
+// (Email verification routes removed by request)
+
 // Public event browse
 Route::get('events', [EventController::class, 'index']);
 Route::get('events/{event}', [EventController::class, 'show']);
@@ -52,7 +54,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('rezervations/{id}/confirm', [RezervationController::class, 'confirm']);
     Route::apiResource('rezervations', RezervationController::class)->only(['index','show','destroy']);
 
-    Route::middleware('auth:api')->group(function () {
+    Route::middleware(['auth:api'])->group(function () {
         Route::get('tickets', [TicketController::class, 'index']);
         Route::get('tickets/{id}', [TicketController::class, 'show']);
         Route::post('tickets/{id}/transfer', [TicketController::class, 'transfer']);
