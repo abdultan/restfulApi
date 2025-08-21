@@ -25,10 +25,10 @@ Route::post('auth/register',[AuthController::class,'register']);
 Route::post('auth/login',[AuthController::class,'login']);
 Route::post('auth/logout',[AuthController::class,'logout']);
 Route::post('auth/refresh',[AuthController::class,'refresh']);
+Route::post('auth/resend-email-verification-link',[AuthController::class,'resendEmailVerificationLink']);
+Route::post('auth/verify-email',[AuthController::class,'verifyUserEmail']);
 
-// (Email verification routes removed by request)
 
-// Public event browse
 Route::get('events', [EventController::class, 'index']);
 Route::get('events/{event}', [EventController::class, 'show']);
 
@@ -47,7 +47,6 @@ Route::middleware(['auth:api'])->group(function () {
         Route::apiResource('venues', VenueController::class)->only(['store','update','destroy']);
     });
 
-    // Read endpoints behind auth
     Route::apiResource('venues', VenueController::class)->only(['index','show']);
 
     Route::post('rezervations', [RezervationController::class,'store']);

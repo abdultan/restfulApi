@@ -50,20 +50,18 @@ class AuthController extends Controller
 
     public function register(RegistrationRequest $request){
         $data = $request->validated();
-        $data['password'] = Hash::make($data['password']);
-        $user = User::create($data);
+        $passwordHash = Hash::make($data['password']);
 
-        if($user){
-            $this->service->sendVerificationLink($user);
-            $token = auth()->login($user);
-            return $this->responseWithToken($token,$user);
-        }
-        else {
-            return response()->json([
-                'status'=>'failed',
-                'message'=> 'An error occure while trying to create user'
-            ],500);
-        }
+        $this->service->createPendingVerification(
+            email: $data['email'],
+            name: $data['name'],
+            passwordHash: $passwordHash
+        );
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Verification link sent to your email address. Please verify your email address.'
+        ], 202);
     }
 
     public function responseWithToken($token,$user){

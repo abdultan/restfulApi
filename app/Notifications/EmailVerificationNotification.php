@@ -13,6 +13,7 @@ class EmailVerificationNotification extends Notification
     use Queueable;
 
     protected $url;
+    protected $name;
 
 
     /**
@@ -20,9 +21,10 @@ class EmailVerificationNotification extends Notification
      *
      * @return void
      */
-    public function __construct($url)
+    public function __construct($url, $name = null)
     {
         $this->url = $url;
+        $this->name = $name;
     }
 
     /**
@@ -47,7 +49,7 @@ class EmailVerificationNotification extends Notification
         return (new MailMessage)
                     ->subject('Confirm your email address')
                     ->greeting('Hello!')
-                    ->line("Dear " . $notifiable->name . ",")
+                    ->line("Dear " . ($this->name ?: 'there') . ",")
                     ->line('Thank you for registering. Please confirm your email address by clicking the button below.')
                     ->action('Confirm Email', $this->url)
                     ->line('If you did not create an account, no further action is required.');

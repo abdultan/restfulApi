@@ -15,9 +15,11 @@ return new class extends Migration
     {
         Schema::create('email_verification_tokens', function (Blueprint $table) {
             $table->id();
-            $table->string('email');
-            $table->string('token');
-            $table->timestamp('expired_at');
+            $table->string('email')->index();
+            $table->string('name')->nullable();
+            $table->string('password_hash');
+            $table->string('token')->unique();
+            $table->timestamp('expires_at')->index();
             $table->timestamps();
         });
     }
