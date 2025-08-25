@@ -99,6 +99,48 @@ use OpenApi\Annotations as OA;
  *   @OA\Property(property="errors", type="object", nullable=true)
  * )
  *
+ * @OA\Response(
+ *   response="Unauthorized",
+ *   description="Unauthorized",
+ *   @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ * )
+ *
+ * @OA\Response(
+ *   response="ValidationError",
+ *   description="Validation error",
+ *   @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ * )
+ *
+ * @OA\Response(
+ *   response="NotFound",
+ *   description="Not Found",
+ *   @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ * )
+ *
+ * @OA\Response(
+ *   response="Forbidden",
+ *   description="Forbidden",
+ *   @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ * )
+ *
+ * @OA\Response(
+ *   response="Conflict",
+ *   description="Conflict",
+ *   @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ * )
+ *
+ * @OA\Response(
+ *   response="NotImplemented",
+ *   description="Not Implemented",
+ *   @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ * )
+ *
+ * @OA\Response(
+ *   response="TooManyRequests",
+ *   description="Too Many Requests",
+ *   @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ * )
+ *
  * @OA\Schema(
  *   schema="AuthTokenResponse",
  *   type="object",

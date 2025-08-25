@@ -10,6 +10,16 @@ use OpenApi\Annotations as OA;
  *   description="Event listing and details"
  * )
  *
+ * @OA\Tag(
+ *   name="Tickets",
+ *   description="Ticket operations"
+ * )
+ *
+ * @OA\Tag(
+ *   name="Auth",
+ *   description="Authentication and token management"
+ * )
+ *
  * @OA\Post(
  *   path="/api/events",
  *   tags={"Events"},
@@ -17,7 +27,8 @@ use OpenApi\Annotations as OA;
  *   security={{"bearerAuth": {}}},
  *   @OA\RequestBody(required=true, @OA\JsonContent(ref="#/components/schemas/Event")),
  *   @OA\Response(response=201, description="Created", @OA\JsonContent(ref="#/components/schemas/Event")),
- *   @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
+ *   @OA\Response(response=422, ref="#/components/responses/ValidationError"),
+ *   @OA\Response(response=401, ref="#/components/responses/Unauthorized")
  * )
  *
  * @OA\Put(
@@ -37,7 +48,8 @@ use OpenApi\Annotations as OA;
  *   security={{"bearerAuth": {}}},
  *   @OA\Parameter(name="event", in="path", required=true, @OA\Schema(type="integer")),
  *   @OA\RequestBody(required=true, @OA\JsonContent(ref="#/components/schemas/Event")),
- *   @OA\Response(response=200, description="OK", @OA\JsonContent(ref="#/components/schemas/Event"))
+ *   @OA\Response(response=200, description="OK", @OA\JsonContent(ref="#/components/schemas/Event")),
+ *   @OA\Response(response=401, ref="#/components/responses/Unauthorized")
  * )
  *
  * @OA\Delete(
@@ -46,7 +58,8 @@ use OpenApi\Annotations as OA;
  *   summary="Delete/cancel event (admin)",
  *   security={{"bearerAuth": {}}},
  *   @OA\Parameter(name="event", in="path", required=true, @OA\Schema(type="integer")),
- *   @OA\Response(response=200, description="OK")
+ *   @OA\Response(response=200, description="OK"),
+ *   @OA\Response(response=401, ref="#/components/responses/Unauthorized")
  * )
  *
  * @OA\Get(
@@ -62,7 +75,8 @@ use OpenApi\Annotations as OA;
  *   tags={"Tickets"},
  *   summary="List user tickets",
  *   security={{"bearerAuth": {}}},
- *   @OA\Response(response=200, description="OK")
+ *   @OA\Response(response=200, description="OK"),
+ *   @OA\Response(response=401, ref="#/components/responses/Unauthorized")
  * )
  *
  * @OA\Get(
@@ -80,7 +94,9 @@ use OpenApi\Annotations as OA;
  *   summary="Show ticket",
  *   security={{"bearerAuth": {}}},
  *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
- *   @OA\Response(response=200, description="OK")
+ *   @OA\Response(response=200, description="OK"),
+ *   @OA\Response(response=404, ref="#/components/responses/NotFound"),
+ *   @OA\Response(response=401, ref="#/components/responses/Unauthorized")
  * )
  *
  * @OA\Delete(
@@ -99,7 +115,10 @@ use OpenApi\Annotations as OA;
  *   security={{"bearerAuth": {}}},
  *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
  *   @OA\RequestBody(required=true, @OA\JsonContent(required={"to_user_id"}, @OA\Property(property="to_user_id", type="integer", example=2), @OA\Property(property="note", type="string", nullable=true))),
- *   @OA\Response(response=200, description="OK")
+ *   @OA\Response(response=200, description="OK"),
+ *   @OA\Response(response=404, ref="#/components/responses/NotFound"),
+ *   @OA\Response(response=422, ref="#/components/responses/ValidationError"),
+ *   @OA\Response(response=401, ref="#/components/responses/Unauthorized")
  * )
  *
  * @OA\Post(
@@ -108,7 +127,10 @@ use OpenApi\Annotations as OA;
  *   summary="Cancel ticket",
  *   security={{"bearerAuth": {}}},
  *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
- *   @OA\Response(response=200, description="OK")
+ *   @OA\Response(response=200, description="OK"),
+ *   @OA\Response(response=404, ref="#/components/responses/NotFound"),
+ *   @OA\Response(response=422, ref="#/components/responses/ValidationError"),
+ *   @OA\Response(response=401, ref="#/components/responses/Unauthorized")
  * )
  * @OA\Get(
  *   path="/api/events/{id}/seats",
@@ -117,7 +139,7 @@ use OpenApi\Annotations as OA;
  *   security={{"bearerAuth": {}}},
  *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
  *   @OA\Response(response=200, description="OK", @OA\JsonContent(ref="#/components/schemas/PaginatedSeats")),
- *   @OA\Response(response=404, description="Event Not Found")
+ *   @OA\Response(response=404, ref="#/components/responses/NotFound")
  * )
  *
  * @OA\Get(
@@ -135,7 +157,8 @@ use OpenApi\Annotations as OA;
  *   summary="Login with email and password",
  *   @OA\RequestBody(required=true, @OA\JsonContent(ref="#/components/schemas/AuthLoginRequest")),
  *   @OA\Response(response=200, description="OK", @OA\JsonContent(ref="#/components/schemas/AuthTokenResponse")),
- *   @OA\Response(response=401, description="Unauthorized", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
+ *   @OA\Response(response=401, ref="#/components/responses/Unauthorized"),
+ *   @OA\Response(response=429, ref="#/components/responses/TooManyRequests")
  * )
  *
  * @OA\Post(
@@ -144,7 +167,8 @@ use OpenApi\Annotations as OA;
  *   summary="Register user and send verification email",
  *   @OA\RequestBody(required=true, @OA\JsonContent(ref="#/components/schemas/AuthRegisterRequest")),
  *   @OA\Response(response=202, description="Accepted", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
- *   @OA\Response(response=422, description="Validation error", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
+ *   @OA\Response(response=422, ref="#/components/responses/ValidationError"),
+ *   @OA\Response(response=429, ref="#/components/responses/TooManyRequests")
  * )
  *
  * @OA\Post(
@@ -152,7 +176,8 @@ use OpenApi\Annotations as OA;
  *   tags={"Auth"},
  *   summary="Logout current user",
  *   security={{"bearerAuth": {}}},
- *   @OA\Response(response=200, description="OK", @OA\JsonContent(ref="#/components/schemas/MessageResponse"))
+ *   @OA\Response(response=200, description="OK", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+ *   @OA\Response(response=429, ref="#/components/responses/TooManyRequests")
  * )
  *
  * @OA\Post(
@@ -161,7 +186,8 @@ use OpenApi\Annotations as OA;
  *   summary="Refresh JWT token",
  *   security={{"bearerAuth": {}}},
  *   @OA\Response(response=200, description="OK", @OA\JsonContent(ref="#/components/schemas/AuthTokenResponse")),
- *   @OA\Response(response=401, description="Unauthorized", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
+ *   @OA\Response(response=401, ref="#/components/responses/Unauthorized"),
+ *   @OA\Response(response=429, ref="#/components/responses/TooManyRequests")
  * )
  *
  * @OA\Post(
@@ -169,7 +195,8 @@ use OpenApi\Annotations as OA;
  *   tags={"Auth"},
  *   summary="Resend email verification link",
  *   @OA\RequestBody(required=true, @OA\JsonContent(required={"email"}, @OA\Property(property="email", type="string", format="email", example="user@example.com"))),
- *   @OA\Response(response=200, description="OK", @OA\JsonContent(ref="#/components/schemas/MessageResponse"))
+ *   @OA\Response(response=200, description="OK", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
+ *   @OA\Response(response=429, ref="#/components/responses/TooManyRequests")
  * )
  *
  * @OA\Post(
@@ -181,7 +208,8 @@ use OpenApi\Annotations as OA;
  *     @OA\Property(property="token", type="string", example="ABCDEFG123456")
  *   )),
  *   @OA\Response(response=200, description="OK", @OA\JsonContent(ref="#/components/schemas/MessageResponse")),
- *   @OA\Response(response=400, description="Invalid/Expired token", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
+ *   @OA\Response(response=400, description="Invalid/Expired token", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *   @OA\Response(response=429, ref="#/components/responses/TooManyRequests")
  * )
  *
  * @OA\Tag(
@@ -224,7 +252,10 @@ use OpenApi\Annotations as OA;
  *   summary="Block seats for 15 minutes",
  *   security={{"bearerAuth": {}}},
  *   @OA\RequestBody(required=true, @OA\JsonContent(ref="#/components/schemas/SeatBlockRequest")),
- *   @OA\Response(response=200, description="OK")
+ *   @OA\Response(response=200, description="OK"),
+ *   @OA\Response(response=422, ref="#/components/responses/ValidationError"),
+ *   @OA\Response(response=409, ref="#/components/responses/Conflict"),
+ *   @OA\Response(response=401, ref="#/components/responses/Unauthorized")
  * )
  *
  * @OA\Delete(
@@ -233,7 +264,8 @@ use OpenApi\Annotations as OA;
  *   summary="Release previously blocked seats",
  *   security={{"bearerAuth": {}}},
  *   @OA\RequestBody(required=true, @OA\JsonContent(ref="#/components/schemas/SeatReleaseRequest")),
- *   @OA\Response(response=200, description="OK")
+ *   @OA\Response(response=200, description="OK"),
+ *   @OA\Response(response=401, ref="#/components/responses/Unauthorized")
  * )
  *
  * @OA\Post(
@@ -242,11 +274,12 @@ use OpenApi\Annotations as OA;
  *   summary="Create reservation from blocked seats",
  *   security={{"bearerAuth": {}}},
  *   @OA\RequestBody(required=true, @OA\JsonContent(ref="#/components/schemas/ReservationStoreRequest")),
- *   @OA\Response(
- *     response=201,
- *     description="Created",
- *     @OA\JsonContent(ref="#/components/schemas/Rezervation")
- *   )
+ *   @OA\Response(response=201, description="Created", @OA\JsonContent(ref="#/components/schemas/Rezervation")),
+ *   @OA\Response(response=404, ref="#/components/responses/NotFound"),
+ *   @OA\Response(response=422, ref="#/components/responses/ValidationError"),
+ *   @OA\Response(response=409, ref="#/components/responses/Conflict"),
+ *   @OA\Response(response=403, ref="#/components/responses/Forbidden"),
+ *   @OA\Response(response=401, ref="#/components/responses/Unauthorized")
  * )
  *
  * @OA\Post(
@@ -255,7 +288,12 @@ use OpenApi\Annotations as OA;
  *   summary="Confirm reservation and issue tickets",
  *   security={{"bearerAuth": {}}},
  *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
- *   @OA\Response(response=200, description="OK")
+ *   @OA\Response(response=200, description="OK"),
+ *   @OA\Response(response=404, ref="#/components/responses/NotFound"),
+ *   @OA\Response(response=409, ref="#/components/responses/Conflict"),
+ *   @OA\Response(response=422, ref="#/components/responses/ValidationError"),
+ *   @OA\Response(response=403, ref="#/components/responses/Forbidden"),
+ *   @OA\Response(response=401, ref="#/components/responses/Unauthorized")
  * )
  *
  * @OA\Get(
@@ -272,12 +310,9 @@ use OpenApi\Annotations as OA;
  *   summary="Get reservation by id",
  *   security={{"bearerAuth": {}}},
  *   @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
- *   @OA\Response(
- *     response=200,
- *     description="OK",
- *     @OA\JsonContent(ref="#/components/schemas/Rezervation")
- *   ),
- *   @OA\Response(response=404, description="Not Found")
+ *   @OA\Response(response=200, description="OK", @OA\JsonContent(ref="#/components/schemas/Rezervation")),
+ *   @OA\Response(response=404, ref="#/components/responses/NotFound"),
+ *   @OA\Response(response=401, ref="#/components/responses/Unauthorized")
  * )
  */
 class Paths {}
