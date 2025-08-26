@@ -12,10 +12,12 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Traits\ApiResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class TicketController extends Controller
 {
+    use ApiResponse;
     /**
      * Display a listing of the resource.
      *
@@ -37,7 +39,7 @@ class TicketController extends Controller
         }
 
         $tickets = $q->latest()->paginate(10);
-        return response()->json($tickets, 200);
+        return $this->successResponse($tickets, 'Tickets retrieved successfully');
     }
 
     /**
@@ -46,9 +48,9 @@ class TicketController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        //
+        return $this->notImplementedResponse();
     }
 
     /**
@@ -67,10 +69,10 @@ class TicketController extends Controller
             ->first();
 
         if (!$ticket) {
-            return response()->json(['message' => 'Ticket not found'], 404);
+            return $this->notFoundResponse('Ticket not found');
         }
 
-        return response()->json($ticket, 200);
+        return $this->successResponse($ticket, 'Ticket retrieved successfully');
     }
     public function transfer(TicketTransferRequest $request, int $id): JsonResponse
     {
@@ -133,10 +135,7 @@ class TicketController extends Controller
             return $ticket->fresh(['rezervation', 'seat']);
         });
 
-        return response()->json([
-            'message' => 'Ticket transferred successfully',
-            'data'    => $updated,
-        ], Response::HTTP_OK);
+        return $this->successResponse($updated, 'Ticket transferred successfully');
     }
     public function cancel(TicketCancelRequest $request, int $id): JsonResponse
     {
@@ -180,10 +179,7 @@ class TicketController extends Controller
             return $ticket->fresh(['rezervation', 'seat']);
         });
 
-        return response()->json([
-            'message' => 'Ticket cancelled',
-            'data'    => $updated,
-        ], Response::HTTP_OK);
+        return $this->successResponse($updated, 'Ticket cancelled successfully');
     }
 
     /**
@@ -199,7 +195,7 @@ class TicketController extends Controller
             ->first();
 
         if (!$ticket) {
-            return response()->json(['message' => 'Ticket not found'], Response::HTTP_NOT_FOUND);
+            return $this->notFoundResponse('Ticket not found');
         }
 
         $html = view('tickets.pdf', [
@@ -213,9 +209,12 @@ class TicketController extends Controller
         }
 
         // Fallback: package yoksa bilgilendir
-        return response()->json([
-            'message' => 'PDF package not installed. Please install barryvdh/laravel-dompdf to enable downloads.',
-            'install' => 'composer require barryvdh/laravel-dompdf && php artisan vendor:publish --provider="Barryvdh\\DomPDF\\ServiceProvider"'
-        ], Response::HTTP_NOT_IMPLEMENTED);
+                    return $this->errorResponse(
+                'PDF package not installed. Please install barryvdh/laravel-dompdf to enable downloads.',
+                Response::HTTP_NOT_IMPLEMENTED,
+                [
+                    'install_command' => 'composer require barryvdh/laravel-dompdf && php artisan vendor:publish --provider="Barryvdh\\DomPDF\\ServiceProvider"'
+                ]
+            );
     }
 }

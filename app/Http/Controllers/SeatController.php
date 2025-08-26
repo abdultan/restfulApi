@@ -10,17 +10,18 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Seat;
 use App\Models\Event;
 use App\Models\RezervationItem;
-
-
+use App\Traits\ApiResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class SeatController extends Controller
 {
+    use ApiResponse;
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function block(SeatBlockRequest $request){
+    public function block(SeatBlockRequest $request): JsonResponse {
         $ids = $request->validated('seat_ids');
         $eventId = (int) $request->validated('event_id');
         $userId = $request->user()->id;
@@ -28,10 +29,7 @@ class SeatController extends Controller
         // Etkinlik zamanı kontrolü (başlamamış olmalı)
         $event = Event::findOrFail($eventId);
         if (now()->greaterThanOrEqualTo($event->start_date)) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Event already started',
-            ], 422);
+            return $this->errorResponse('Event already started', Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         return DB::transaction(function () use ($ids,$userId,$eventId) {
@@ -51,10 +49,7 @@ class SeatController extends Controller
             foreach ($seats as $s) {
                 // Global hold kontrolü (yalnızca aktif hold'lar engeller)
                 if ($s->status === Seat::STATUS_RESERVED) {
-                    return response()->json([
-                        'status'=> 'error',
-                        'message'=> "Seat {$s->id} is on hold",
-                    ], 409);
+                    return $this->errorResponse("Seat {$s->id} is on hold", Response::HTTP_CONFLICT);
                 }
 
                 // Event'e göre satılık mı? (ticket/confirmed varsa blocklanamaz)
@@ -65,10 +60,7 @@ class SeatController extends Controller
                     })
                     ->exists();
                 if ($isSoldForEvent) {
-                    return response()->json([
-                        'status'=> 'error',
-                        'message'=> "Seat {$s->id} already sold for this event",
-                    ], 409);
+                    return $this->errorResponse("Seat {$s->id} already sold for this event", Response::HTTP_CONFLICT);
                 }
 
                 // Event'e göre bekleyen rez var mı? (pending + expires_at>now)
@@ -80,10 +72,7 @@ class SeatController extends Controller
                     })
                     ->exists();
                 if ($hasPending) {
-                    return response()->json([
-                        'status'=> 'error',
-                        'message'=> "Seat {$s->id} is reserved for this event",
-                    ], 409);
+                    return $this->errorResponse("Seat {$s->id} is reserved for this event", Response::HTTP_CONFLICT);
                 }
                 }
 
@@ -93,10 +82,10 @@ class SeatController extends Controller
                 'reserved_until' => now()->addMinutes(15),
             ]);
             
-            return response()->json([
-                'status'           => 'success',
-                'blocked_seat_ids' => $seats->pluck('id')->values(),
-            ], 200);
+            return $this->successResponse(
+                ['blocked_seat_ids' => $seats->pluck('id')->values()],
+                'Seats blocked successfully'
+            );
         });
     }
     
@@ -113,13 +102,13 @@ class SeatController extends Controller
                 'reserved_by' => null,
                 'reserved_until' => null,]);
 
-        return response()->json([
-            'status'         => 'success',
-            'released_count' => $affected,
-        ], 200);
+        return $this->successResponse(
+            ['released_count' => $affected],
+            'Seats released successfully'
+        );
     }
 
-    public function byEvent($eventId)
+    public function byEvent($eventId): JsonResponse
     {
     $event = Event::with('venue')->findOrFail($eventId);
     $now = now();
@@ -156,58 +145,16 @@ class SeatController extends Controller
         return $s;
     });
 
-    return response()->json($seats, 200);
+    return $this->successResponse($seats, 'Seats retrieved successfully');
     }
 
 
-    public function byVenue($venueId)
+    public function byVenue($venueId): JsonResponse
     {
     $seats = Seat::where('venue_id', $venueId)->get();
-    return response()->json($seats);
+    return $this->successResponse($seats, 'Venue seats retrieved successfully');
     }
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
 }
+   
+   
+

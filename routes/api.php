@@ -23,10 +23,10 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::post('auth/register',[AuthController::class,'register'])->middleware('throttle:register');
 Route::post('auth/login',[AuthController::class,'login'])->middleware('throttle:login');
-Route::post('auth/logout',[AuthController::class,'logout'])->middleware('throttle:api');
-Route::post('auth/refresh',[AuthController::class,'refresh'])->middleware('throttle:refresh');
 Route::post('auth/resend-email-verification-link',[AuthController::class,'resendEmailVerificationLink'])->middleware('throttle:resend-email');
 Route::post('auth/verify-email',[AuthController::class,'verifyUserEmail'])->middleware('throttle:verify-email');
+Route::post('auth/logout',[AuthController::class,'logout'])->middleware('throttle:api');
+Route::post('auth/refresh',[AuthController::class,'refresh'])->middleware('throttle:refresh');
 
 
 Route::get('events', [EventController::class, 'index']);
@@ -39,16 +39,16 @@ Route::middleware(['auth:api'])->group(function () {
     Route::delete('seats/release',[SeatController::class,'release']);
 });
 
-// Admin-only event mutations
 Route::middleware('admin')->group(function () {
     Route::post('events', [EventController::class, 'store']);
     Route::put('events/{event}', [EventController::class, 'update']);
     Route::patch('events/{event}', [EventController::class, 'update']);
     Route::delete('events/{event}', [EventController::class, 'destroy']);
-    Route::apiResource('venues', VenueController::class)->only(['store','update','destroy']);
+    Route::post('venues',[VenueController::class,'store']);
+    Route::delete('venues/{venue}', [VenueController::class,'destroy']);
+    Route::put('venues/{venue}', [VenueController::class,'update']);
 });
 
-Route::apiResource('venues', VenueController::class)->only(['index','show']);
 
 Route::post('rezervations', [RezervationController::class,'store']);
 Route::post('rezervations/{id}/confirm', [RezervationController::class, 'confirm']);
@@ -59,7 +59,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('tickets/{id}', [TicketController::class, 'show']);
     Route::post('tickets/{id}/transfer', [TicketController::class, 'transfer']);
     Route::post('tickets/{id}/cancel',   [TicketController::class, 'cancel']);
-    Route::get('tickets/{id}/download',  [TicketController::class, 'download']); // bonus
+    Route::get('tickets/{id}/download',  [TicketController::class, 'download']);
 });
 
 

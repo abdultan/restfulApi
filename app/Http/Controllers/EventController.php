@@ -6,9 +6,13 @@ use App\Models\Event;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use App\Traits\ApiResponse;
 
 class EventController extends Controller
 {
+    use ApiResponse;
+
     /**
      * Display a listing of the resource.
      *
@@ -33,7 +37,7 @@ class EventController extends Controller
             ->orderBy('start_date')
             ->paginate(10);
 
-        return response()->json($events);
+        return $this->successResponse($events, 'Events retrieved successfully');
     }
 
     /**
@@ -45,7 +49,7 @@ class EventController extends Controller
     public function store(StoreEventRequest $request)
     {
         $event = Event::create($request->validated());
-        return response()->json($event->load('venue'), 201);
+        return $this->createdResponse($event->load('venue'));
     }
 
     /**
@@ -56,7 +60,7 @@ class EventController extends Controller
      */
     public function show(Event $event)
     {
-        return response()->json($event->load('venue'));
+        return $this->successResponse($event->load('venue'), 'Event retrieved successfully');
     }
 
     /**
@@ -69,7 +73,7 @@ class EventController extends Controller
     public function update(UpdateEventRequest $request, Event $event)
     {
         $event->update($request->validated());
-        return response()->json($event->load('venue'));
+        return $this->successResponse($event->load('venue'), 'Event updated successfully');
     }
 
     /**
@@ -82,9 +86,9 @@ class EventController extends Controller
     {
         if ($event->rezervations()->exists()) {
             $event->update(['status' => 'cancelled']);
-            return response()->json(['message'=>'Event cancelled (has related records).']);
+            return $this->successResponse(null, 'Event cancelled (has related records)');
         }
         $event->delete();
-        return response()->json(['message'=>'Event deleted.']);
+        return $this->successResponse(null, 'Event deleted successfully');
     }
 }
