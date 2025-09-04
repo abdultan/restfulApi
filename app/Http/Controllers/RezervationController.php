@@ -13,10 +13,15 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Services\RezervationService;
+use App\Http\Resources\RezervationResource;
+use App\Traits\ApiResponse;
 
 
 class RezervationController extends Controller
 {
+    use ApiResponse;
+    public function __construct(private RezervationService $rezervationService) {}
     /**
      * Display a listing of the resource.
      *
@@ -25,13 +30,9 @@ class RezervationController extends Controller
     public function index(Request $request): JsonResponse
     {
         $userId = $request->user()->id;
-
-        $rezervations = Rezervation::with(['items.seat', 'event'])
-            ->where('user_id', $userId)
-            ->latest()
-            ->paginate(10); 
-
-        return response()->json($rezervations, 200);
+        $rezervations = $this->rezervationService->listForUser($userId, 10);
+        $payload = RezervationResource::collection($rezervations)->response()->getData(true);
+        return $this->successResponse($payload, 'Reservations retrieved successfully');
     }
     /**
      * Store a newly created resource in storage.
@@ -39,112 +40,21 @@ class RezervationController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(RezervationStoreRequest $request)
-{
-    $userId  = $request->user()->id;
-    $eventId = (int) $request->validated('event_id');
-    $seatIds = $request->validated('seat_ids');
+    public function store(RezervationStoreRequest $request): JsonResponse
+    {
+        $userId  = $request->user()->id;
+        $eventId = (int) $request->validated('event_id');
+        $seatIds = $request->validated('seat_ids');
 
-    // Etkinlik zamanı ve durumu kontrolü
-    $evt = Event::findOrFail($eventId);
-    if ($evt->status !== 'published') {
-        return response()->json(['message' => 'Event is not published'], 422);
+        $this->authorize('create', Rezervation::class);
+
+        $result = $this->rezervationService->store($userId, $eventId, $seatIds);
+        if (!$result['ok']) {
+            return $this->errorResponse($result['message'], $result['code'], $result);
+        }
+
+        return $this->createdResponse(new RezervationResource($result['rezervation']), 'Reservation created successfully');
     }
-    if (now()->greaterThanOrEqualTo($evt->start_date)) {
-        return response()->json(['message' => 'Event already started'], 422);
-    }
-
-    return DB::transaction(function () use ($userId, $eventId, $seatIds) {
-
-        $seats = Seat::whereIn('id', $seatIds)->lockForUpdate()->get();
-
-        if ($seats->count() !== count($seatIds)) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Some seats not found',
-            ], 404);
-        }
-
-        $venueIds = $seats->pluck('venue_id')->unique();
-        if ($venueIds->count() !== 1) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Selected seats must belong to the same venue',
-            ], 422);
-        }
-
-        $event = Event::find($eventId);
-        if (!$event || (int)$event->venue_id !== (int)$venueIds->first()) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Seats do not belong to the given event',
-            ], 422);
-        }
-
-        $duplicate = RezervationItem::whereIn('seat_id', $seatIds)
-            ->whereHas('rezervation', function ($q) use ($userId) {
-                $q->where('user_id', $userId)
-                    ->where('status', 'pending');
-            })
-            ->first();
-
-        if ($duplicate) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => "Seat {$duplicate->seat_id} already exists in your pending reservation",
-                'reservation_id' => $duplicate->rezervation_id,
-            ], 409);
-        }
-
-        foreach ($seats as $s) {
-            if ($s->status !== Seat::STATUS_RESERVED) {
-                return response()->json([
-                    'status'  => 'error',
-                    'message' => "Seat {$s->id} is not reserved",
-                ], 409);
-            }
-            if ((int)$s->reserved_by !== (int)$userId) {   // 👈 sahiplik kontrolü
-                return response()->json([
-                    'status'  => 'error',
-                    'message' => "Seat {$s->id} reserved by another user",
-                ], 403);
-            }
-        
-            if ($s->reserved_until && now()->greaterThan($s->reserved_until)) {
-                return response()->json([
-                    'status'  => 'error',
-                    'message' => "Seat {$s->id} hold expired",
-                ], 409);
-            }
-        }
-
-        $total = $seats->sum('price');
-
-        $rez = Rezervation::create([
-            'user_id'      => $userId,
-            'event_id'     => $eventId,
-            'status'       => 'pending', // confirm ile değişecek
-            'total_amount' => $total,
-            'expires_at'   => Carbon::now()->addMinutes(15),
-        ]);
-
-        foreach ($seats as $s) {
-            RezervationItem::create([
-                'rezervation_id' => $rez->id,
-                'seat_id'        => $s->id,
-                'price'          => $s->price,
-            ]);
-        }
-
-        return response()->json([
-            'status'          => 'success',
-            'reservation_id'  => $rez->id,
-            'total_amount'    => $total,
-            'expires_at'      => $rez->expires_at->toISOString(),
-            'items_count'     => $seats->count(),
-        ], 201);
-    });
-}
 
     /**
      * Display the specified resource.
@@ -157,78 +67,21 @@ class RezervationController extends Controller
 {
     $userId = auth()->id();
 
-    return DB::transaction(function () use ($id, $userId) {
-        // 1) Rezervasyonu kilitle + temel kontroller
-        $rez = Rezervation::with('items')  // RezervationItem ilişkisi olmalı
-            ->lockForUpdate()
-            ->find($id);
+    $rez = Rezervation::find($id);
+    if (!$rez) {
+        return $this->errorResponse('Reservation not found', 404);
+    }
+    $this->authorize('confirm', $rez);
 
-        if (!$rez || $rez->user_id !== $userId) {
-            return response()->json(['message' => 'Reservation not found'], 404);
-        }
-        if ($rez->status !== 'pending') {
-            return response()->json(['message' => 'Reservation is not pending'], 409);
-        }
-        // Etkinlik başlamamış olmalı ve yayımlanmış olmalı
-        if ($rez->event->status !== 'published') {
-            return response()->json(['message' => 'Event is not published'], 422);
-        }
-        if (now()->greaterThanOrEqualTo($rez->event->start_date)) {
-            return response()->json(['message' => 'Event already started'], 422);
-        }
-        if ($rez->expires_at && now()->greaterThan($rez->expires_at)) {
-            return response()->json(['message' => 'Reservation expired'], 409);
-        }
+    $result = $this->rezervationService->confirm($id, $userId);
+    if (!$result['ok']) {
+        return $this->errorResponse($result['message'], $result['code']);
+    }
 
-        // 2) İlgili seat’ları kilitle + ayrıntılı kontroller
-        $seatIds = $rez->items->pluck('seat_id')->sort()->values();
-        $seats   = Seat::whereIn('id', $seatIds)->lockForUpdate()->get();
-
-        foreach ($seats as $s) {
-            if ($s->status !== Seat::STATUS_RESERVED) {
-                return response()->json(['message' => "Seat {$s->id} is not reserved"], 409);
-            }
-            if ((int)$s->reserved_by !== (int)$userId) {
-                return response()->json(['message' => "Seat {$s->id} reserved by another user"], 403);
-            }
-            if ($s->reserved_until && now()->greaterThan($s->reserved_until)) {
-                return response()->json(['message' => "Seat {$s->id} hold expired"], 409);
-            }
-        }
-
-        // 3) Seats -> SOLD
-        Seat::whereIn('id', $seatIds)->update([
-            'status'         => Seat::STATUS_SOLD,
-            'reserved_by'    => null,
-            'reserved_until' => null,
-        ]);
-
-        // 4) Tickets oluştur
-        $tickets = [];
-        foreach ($seatIds as $sid) {
-            $tickets[] = Ticket::create([
-                'rezervation_id' => $rez->id,
-                'seat_id'        => $sid,
-                'ticket_code'    => Str::upper(Str::random(10)),
-                'status'         => 'active',
-            ]);
-        }
-
-        // 5) Rezervasyonu güncelle
-        $rez->update(['status' => 'confirmed']);
-
-        // 6) Yanıt
-        return response()->json([
-            'status'         => 'success',
-            'reservation_id' => $rez->id,
-            'tickets'        => collect($tickets)->map(fn($t) => [
-                'id'          => $t->id,
-                'seat_id'     => $t->seat_id,
-                'ticket_code' => $t->ticket_code,
-                'status'      => $t->status,
-            ]),
-        ], 200);
-    });
+    return $this->successResponse([
+        'reservation' => new RezervationResource($result['rezervation']),
+        'tickets' => $result['tickets'],
+    ], 'Reservation confirmed successfully');
 }
 public function show(Request $request, int $id): JsonResponse
 {
@@ -240,10 +93,10 @@ public function show(Request $request, int $id): JsonResponse
         ->first();
 
     if (!$rez) {
-        return response()->json(['message' => 'Reservation not found'], 404);
+        return $this->errorResponse('Reservation not found', 404);
     }
 
-    return response()->json($rez, 200);
+    return $this->successResponse(new RezervationResource($rez), 'Reservation retrieved successfully');
 }
 
     /**
@@ -274,25 +127,20 @@ public function show(Request $request, int $id): JsonResponse
         ->first();
 
     if (!$rez) {
-        return response()->json(['message' => 'Reservation not found'], 404);
+        return $this->errorResponse('Reservation not found', 404);
     }
 
     if ($rez->status !== 'pending') {
-        return response()->json(['message' => 'Only pending reservations can be cancelled'], 409);
+        return $this->errorResponse('Only pending reservations can be cancelled', 409);
     }
 
-    DB::transaction(function () use ($rez) {
-        $seatIds = $rez->items->pluck('seat_id');
+    $this->authorize('delete', $rez);
 
-        Seat::whereIn('id', $seatIds)->update([
-            'status'         => Seat::STATUS_AVAILABLE,
-            'reserved_by'    => null,      // bu alanları eklediysen
-            'reserved_until' => null,
-        ]);
+    $result = $this->rezervationService->cancel($id, $userId);
+    if (!$result['ok']) {
+        return $this->errorResponse($result['message'], $result['code']);
+    }
 
-        $rez->update(['status' => 'cancelled']);
-    });
-
-    return response()->json(['status' => 'success'], 200);
+    return $this->successResponse(null, 'Reservation cancelled successfully');
 }
 }

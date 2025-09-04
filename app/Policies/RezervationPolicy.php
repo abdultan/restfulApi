@@ -30,7 +30,7 @@ class RezervationPolicy
      */
     public function view(User $user, Rezervation $rezervation)
     {
-        //
+        return $rezervation->user_id === $user->id;
     }
 
     /**
@@ -41,7 +41,7 @@ class RezervationPolicy
      */
     public function create(User $user)
     {
-        //
+        return $user !== null;
     }
 
     /**
@@ -53,7 +53,7 @@ class RezervationPolicy
      */
     public function update(User $user, Rezervation $rezervation)
     {
-        //
+        return $rezervation->user_id === $user->id && $rezervation->status === 'pending';
     }
 
     /**
@@ -65,7 +65,15 @@ class RezervationPolicy
      */
     public function delete(User $user, Rezervation $rezervation)
     {
-        //
+        return $rezervation->user_id === $user->id && $rezervation->status === 'pending';
+    }
+
+    /**
+     * Confirm reservation (custom ability).
+     */
+    public function confirm(User $user, Rezervation $rezervation): bool
+    {
+        return $rezervation->user_id === $user->id && $rezervation->status === 'pending';
     }
 
     /**

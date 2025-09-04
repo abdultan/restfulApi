@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\SeatReleaseRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use App\Services\SeatService;
 use App\Models\Seat;
 use App\Models\Event;
 use App\Models\RezervationItem;
@@ -16,6 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
 class SeatController extends Controller
 {
     use ApiResponse;
+    public function __construct(private SeatService $seatService) {}
     /**
      * Display a listing of the resource.
      *
@@ -25,68 +27,16 @@ class SeatController extends Controller
         $ids = $request->validated('seat_ids');
         $eventId = (int) $request->validated('event_id');
         $userId = $request->user()->id;
+        $this->authorize('block', Seat::class);
 
-        // Etkinlik zamanı kontrolü (başlamamış olmalı)
-        $event = Event::findOrFail($eventId);
-        if (now()->greaterThanOrEqualTo($event->start_date)) {
-            return $this->errorResponse('Event already started', Response::HTTP_UNPROCESSABLE_ENTITY);
+        $result = $this->seatService->block($ids, $eventId, $userId);
+        if (!$result['ok']) {
+            return $this->errorResponse($result['message'], $result['code']);
         }
 
-        return DB::transaction(function () use ($ids,$userId,$eventId) {
-            $seats = Seat::whereIn('id', $ids)->lockForUpdate()->get();
-
-            foreach ($seats as $s) {
-                if ($s->status === Seat::STATUS_RESERVED && $s->reserved_until && $s->reserved_until->isPast()) {
-                    $s->update([
-                        'status'         => Seat::STATUS_AVAILABLE,
-                        'reserved_by'    => null,
-                        'reserved_until' => null,
-                    ]);
-                }
-            }
-            $seats = Seat::whereIn('id', $ids)->lockForUpdate()->get();
-
-            foreach ($seats as $s) {
-                // Global hold kontrolü (yalnızca aktif hold'lar engeller)
-                if ($s->status === Seat::STATUS_RESERVED) {
-                    return $this->errorResponse("Seat {$s->id} is on hold", Response::HTTP_CONFLICT);
-                }
-
-                // Event'e göre satılık mı? (ticket/confirmed varsa blocklanamaz)
-                $isSoldForEvent = $s->tickets()
-                    ->where('status','active')
-                    ->whereHas('rezervation', function($q) use ($eventId){
-                        $q->where('event_id',$eventId)->where('status','confirmed');
-                    })
-                    ->exists();
-                if ($isSoldForEvent) {
-                    return $this->errorResponse("Seat {$s->id} already sold for this event", Response::HTTP_CONFLICT);
-                }
-
-                // Event'e göre bekleyen rez var mı? (pending + expires_at>now)
-                $hasPending = $s->rezervationItems()
-                    ->whereHas('rezervation', function($q) use ($eventId) {
-                        $q->where('event_id',$eventId)
-                          ->where('status', 'pending')
-                          ->where('expires_at','>', now());
-                    })
-                    ->exists();
-                if ($hasPending) {
-                    return $this->errorResponse("Seat {$s->id} is reserved for this event", Response::HTTP_CONFLICT);
-                }
-                }
-
-            Seat::whereIn('id', $ids)->update([
-                'status'         => Seat::STATUS_RESERVED,
-                'reserved_by'    => $userId,
-                'reserved_until' => now()->addMinutes(15),
-            ]);
-            
-            return $this->successResponse(
-                ['blocked_seat_ids' => $seats->pluck('id')->values()],
-                'Seats blocked successfully'
-            );
-        });
+        return $this->successResponse([
+            'blocked_seat_ids' => $result['blocked_seat_ids'],
+        ], 'Seats blocked successfully');
     }
     
     public function release(SeatReleaseRequest $request): JsonResponse
@@ -94,18 +44,12 @@ class SeatController extends Controller
         $ids = $request->validated('seat_ids');
         $userId = $request->user()->id;
 
-        $affected = Seat::whereIn('id', $ids)
-            ->where('status', Seat::STATUS_RESERVED)
-            ->where('reserved_by', $userId)
-            ->update([
-                'status' => Seat::STATUS_AVAILABLE,
-                'reserved_by' => null,
-                'reserved_until' => null,]);
+        $this->authorize('release', Seat::class);
 
-        return $this->successResponse(
-            ['released_count' => $affected],
-            'Seats released successfully'
-        );
+        $result = $this->seatService->release($ids, $userId);
+        return $this->successResponse([
+            'released_count' => $result['released_count']
+        ], 'Seats released successfully');
     }
 
     public function byEvent($eventId): JsonResponse

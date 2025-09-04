@@ -4,91 +4,57 @@ namespace App\Policies;
 
 use App\Models\Ticket;
 use App\Models\User;
-use Illuminate\Auth\Access\HandlesAuthorization;
+use Carbon\Carbon;
 
 class TicketPolicy
 {
-    use HandlesAuthorization;
-
     /**
-     * Determine whether the user can view any models.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Auth\Access\Response|bool
+     * Determine whether the user can view the ticket.
      */
-    public function viewAny(User $user)
+    public function view(User $user, Ticket $ticket): bool
     {
-        //
+        return $ticket->rezervation->user_id === $user->id;
     }
 
     /**
-     * Determine whether the user can view the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Ticket  $ticket
-     * @return \Illuminate\Auth\Access\Response|bool
+     * Determine whether the user can transfer the ticket.
      */
-    public function view(User $user, Ticket $ticket)
+    public function transfer(User $user, Ticket $ticket): bool
     {
-        //
+        // Check ownership
+        if ($ticket->rezervation->user_id !== $user->id) {
+            return false;
+        }
+
+        // Check status
+        if (!in_array($ticket->status, [Ticket::STATUS_ACTIVE, Ticket::STATUS_TRANSFERRED], true)) {
+            return false;
+        }
+
+        // Check if event is in the future
+        $startDate = Carbon::parse($ticket->rezervation->event->start_date);
+        return $startDate->isFuture();
     }
 
     /**
-     * Determine whether the user can create models.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Auth\Access\Response|bool
+     * Determine whether the user can cancel the ticket.
      */
-    public function create(User $user)
+    public function cancel(User $user, Ticket $ticket): bool
     {
-        //
-    }
+        // Check ownership
+        if ($ticket->rezervation->user_id !== $user->id) {
+            return false;
+        }
 
-    /**
-     * Determine whether the user can update the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Ticket  $ticket
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function update(User $user, Ticket $ticket)
-    {
-        //
-    }
+        // Check status
+        if (!in_array($ticket->status, [Ticket::STATUS_ACTIVE, Ticket::STATUS_TRANSFERRED], true)) {
+            return false;
+        }
 
-    /**
-     * Determine whether the user can delete the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Ticket  $ticket
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function delete(User $user, Ticket $ticket)
-    {
-        //
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Ticket  $ticket
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function restore(User $user, Ticket $ticket)
-    {
-        //
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Ticket  $ticket
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function forceDelete(User $user, Ticket $ticket)
-    {
-        //
+        // Check cancellation window (24 hours before event)
+        $startDate = Carbon::parse($ticket->rezervation->event->start_date);
+        $minHours = config('tickets.cancel_min_hours_before', 24);
+        
+        return now()->diffInHours($startDate, false) >= $minHours;
     }
 }

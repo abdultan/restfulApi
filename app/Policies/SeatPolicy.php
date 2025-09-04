@@ -57,6 +57,22 @@ class SeatPolicy
     }
 
     /**
+     * Allow blocking seats for authenticated users.
+     */
+    public function block(User $user): bool
+    {
+        return $user !== null;
+    }
+
+    /**
+     * Allow releasing seats for authenticated users.
+     */
+    public function release(User $user): bool
+    {
+        return $user !== null;
+    }
+
+    /**
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\User  $user

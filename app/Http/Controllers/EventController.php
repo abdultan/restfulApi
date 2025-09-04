@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
+use App\Http\Resources\EventResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Traits\ApiResponse;
@@ -18,7 +19,7 @@ class EventController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index(Request $req)
+    public function index(Request $req): JsonResponse
     {
         $term        = $req->query('q');
         $venueId     = $req->query('venue_id');
@@ -37,7 +38,9 @@ class EventController extends Controller
             ->orderBy('start_date')
             ->paginate(10);
 
-        return $this->successResponse($events, 'Events retrieved successfully');
+        $payload = EventResource::collection($events)->response()->getData(true);
+
+        return $this->successResponse($payload, 'Events retrieved successfully');
     }
 
     /**
@@ -46,10 +49,10 @@ class EventController extends Controller
      * @param  StoreEventRequest  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function store(StoreEventRequest $request)
+    public function store(StoreEventRequest $request): JsonResponse
     {
         $event = Event::create($request->validated());
-        return $this->createdResponse($event->load('venue'));
+        return $this->createdResponse(new EventResource($event->load('venue')), 'Event created successfully');
     }
 
     /**
@@ -58,9 +61,9 @@ class EventController extends Controller
      * @param  Event  $event
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show(Event $event)
+    public function show(Event $event): JsonResponse
     {
-        return $this->successResponse($event->load('venue'), 'Event retrieved successfully');
+        return $this->successResponse(new EventResource($event->load('venue')), 'Event retrieved successfully');
     }
 
     /**
@@ -70,10 +73,10 @@ class EventController extends Controller
      * @param  Event  $event
      * @return \Illuminate\Http\JsonResponse
      */
-    public function update(UpdateEventRequest $request, Event $event)
+    public function update(UpdateEventRequest $request, Event $event): JsonResponse
     {
         $event->update($request->validated());
-        return $this->successResponse($event->load('venue'), 'Event updated successfully');
+        return $this->successResponse(new EventResource($event->load('venue')), 'Event updated successfully');
     }
 
     /**
@@ -82,7 +85,7 @@ class EventController extends Controller
      * @param  Event  $event
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy(Event $event)
+    public function destroy(Event $event): JsonResponse
     {
         if ($event->rezervations()->exists()) {
             $event->update(['status' => 'cancelled']);

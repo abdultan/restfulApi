@@ -49,17 +49,16 @@ Route::middleware('admin')->group(function () {
     Route::put('venues/{venue}', [VenueController::class,'update']);
 });
 
-
 Route::post('rezervations', [RezervationController::class,'store']);
 Route::post('rezervations/{id}/confirm', [RezervationController::class, 'confirm']);
 Route::apiResource('rezervations', RezervationController::class)->only(['index','show','destroy']);
 
 Route::middleware(['auth:api'])->group(function () {
     Route::get('tickets', [TicketController::class, 'index']);
-    Route::get('tickets/{id}', [TicketController::class, 'show']);
-    Route::post('tickets/{id}/transfer', [TicketController::class, 'transfer']);
-    Route::post('tickets/{id}/cancel',   [TicketController::class, 'cancel']);
-    Route::get('tickets/{id}/download',  [TicketController::class, 'download']);
+    Route::get('tickets/{ticket}', [TicketController::class, 'show']);
+    Route::post('tickets/{ticket}/transfer', [TicketController::class, 'transfer']);
+    Route::post('tickets/{ticket}/cancel', [TicketController::class, 'cancel']);
+    Route::get('tickets/{ticket}/download', [TicketController::class, 'download']);
 });
 
 
