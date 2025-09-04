@@ -8,8 +8,7 @@ use App\Http\Controllers\SeatController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\VenueController;
 use App\Http\Controllers\RezervationController;
-use App\Http\Controllers\RezervationItemController;
-use App\Http\Controllers\UserController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -21,12 +20,20 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('auth/register',[AuthController::class,'register'])->middleware('throttle:register');
-Route::post('auth/login',[AuthController::class,'login'])->middleware('throttle:login');
-Route::post('auth/resend-email-verification-link',[AuthController::class,'resendEmailVerificationLink'])->middleware('throttle:resend-email');
-Route::post('auth/verify-email',[AuthController::class,'verifyUserEmail'])->middleware('throttle:verify-email');
-Route::post('auth/logout',[AuthController::class,'logout'])->middleware('throttle:api');
-Route::post('auth/refresh',[AuthController::class,'refresh'])->middleware('throttle:refresh');
+Route::prefix('auth')->group(function () {
+    Route::middleware(['guest:api'])->group(function () {
+        Route::post('register', [AuthController::class, 'register'])->middleware('throttle:register');
+        Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
+    });
+
+    Route::middleware(['auth:api'])->group(function () {
+        Route::post('logout', [AuthController::class, 'logout'])->middleware('throttle:api');
+        Route::post('refresh', [AuthController::class, 'refresh'])->middleware('throttle:refresh');
+        Route::post('resend-email-verification-link', [AuthController::class, 'resendEmailVerificationLink'])->middleware('throttle:resend-email');
+    });
+
+    Route::post('verify-email', [AuthController::class, 'verifyUserEmail'])->middleware('throttle:verify-email');
+});
 
 
 Route::get('events', [EventController::class, 'index']);
