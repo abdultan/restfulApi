@@ -44,17 +44,14 @@ class UpdateEventRequest extends FormRequest
                 return;
             }
 
-            // venue kilidi:
             if ($this->filled('venue_id') && $event->status === 'published' && $this->venue_id != $event->venue_id) {
                 $v->errors()->add('venue_id', 'Published etkinlikte venue değiştirilemez.');
             }
 
-            // tarihi geçmişe itmeyelim:
             if ($this->filled('start_date') && now()->gt(new Carbon($this->start_date))) {
                 $v->errors()->add('start_date', 'Start geçmiş bir zamana çekilemez.');
             }
 
-            // durum geçiş kuralı örneği:
             if ($this->filled('status')) {
                 $from = $event->status;
                 $to   = $this->status;

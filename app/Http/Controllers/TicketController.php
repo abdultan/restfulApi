@@ -66,10 +66,14 @@ class TicketController extends Controller
     {
         $this->authorize('transfer', $ticket);
 
-        $toUserId = (int) $request->validated('to_user_id');
-        $updatedTicket = $this->ticketService->transfer($ticket, $toUserId);
+        try {
+            $email = $request->validated('email');
+            $updatedTicket = $this->ticketService->transferToEmail($ticket, $email);
 
-        return $this->successResponse(new TicketResource($updatedTicket), 'Ticket transferred successfully');
+            return $this->successResponse(new TicketResource($updatedTicket), 'Ticket transferred successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
     }
 
     /**
@@ -87,27 +91,21 @@ class TicketController extends Controller
     /**
      * Download ticket as PDF.
      */
-    public function download(Request $request, Ticket $ticket): JsonResponse
+    public function download(Request $request, Ticket $ticket)
     {
         $this->authorize('view', $ticket);
 
-        $ticket->load(['seat', 'rezervation.event']);
+        $ticket->load(['seat', 'rezervation.event.venue']);
 
-        $html = view('tickets.pdf', compact('ticket'))->render();
-
-        // Check if dompdf is installed
-        if (class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
+        try {
+            $html = view('tickets.pdf', compact('ticket'))->render();
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html)->setPaper('a4');
             return $pdf->download('ticket-' . $ticket->id . '.pdf');
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'PDF generation failed: ' . $e->getMessage(),
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
-
-        // Fallback: return JSON with installation hint
-        return $this->errorResponse(
-            'PDF package not installed. Please install barryvdh/laravel-dompdf to enable downloads.',
-            Response::HTTP_NOT_IMPLEMENTED,
-            [
-                'install_command' => 'composer require barryvdh/laravel-dompdf && php artisan vendor:publish --provider="Barryvdh\\DomPDF\\ServiceProvider"'
-            ]
-        );
     }
 }

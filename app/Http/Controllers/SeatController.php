@@ -76,9 +76,9 @@ class SeatController extends Controller
             },
         ])
         ->orderBy('section')->orderBy('row')->orderBy('number')
-        ->paginate(100);
+        ->get();
 
-    $seats->getCollection()->transform(function ($s) {
+    $seats = $seats->map(function ($s) {
         $eventStatus = $s->sold_for_event > 0 ? 'sold'
             : ($s->pending_for_event > 0 ? 'reserved' : 'available');
 

@@ -6,6 +6,7 @@ use App\Models\Ticket;
 use App\Models\Rezervation;
 use App\Models\RezervationItem;
 use App\Models\Seat;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class TicketService
@@ -17,21 +18,22 @@ class TicketService
     {
         return DB::transaction(function () use ($ticket, $toUserId) {
             // Lock ticket for update to prevent race conditions
-            $ticket = $ticket->lockForUpdate()->load(['rezervation.event', 'seat']);
+            $ticket = Ticket::where('id', $ticket->id)->lockForUpdate()->first();
+            $ticket->load(['rezervation.event', 'seat']);
 
             // Get price from reservation item or seat
-            $itemPrice = RezervationItem::where('rezervation_id', $ticket->rezervation_id)
+            $reservationItem = RezervationItem::where('rezervation_id', $ticket->rezervation_id)
                 ->where('seat_id', $ticket->seat_id)
-                ->value('price');
-            $price = $itemPrice ?? $ticket->seat->price ?? 0;
+                ->first();
+            
+            $price = $reservationItem ? $reservationItem->price : ($ticket->seat->price ?? 0);
 
-            // Create new reservation for target user
             $newRezervation = Rezervation::create([
                 'user_id' => $toUserId,
                 'event_id' => $ticket->rezervation->event->id,
                 'status' => 'confirmed',
                 'total_amount' => $price,
-                'expires_at' => null,
+                'expires_at' => now()->addDays(30), 
             ]);
 
             // Create new reservation item
@@ -52,13 +54,29 @@ class TicketService
     }
 
     /**
+     * Transfer ticket to another user by email.
+     */
+    public function transferToEmail(Ticket $ticket, string $email): Ticket
+    {
+        return DB::transaction(function () use ($ticket, $email) {
+            $targetUser = User::where('email', $email)->first();
+            if (!$targetUser) {
+                throw new \Exception("User with email '{$email}' not found.");
+            }
+
+            return $this->transfer($ticket, $targetUser->id);
+        });
+    }
+
+    /**
      * Cancel ticket and make seat available again.
      */
     public function cancel(Ticket $ticket): Ticket
     {
         return DB::transaction(function () use ($ticket) {
             // Lock ticket for update
-            $ticket = $ticket->lockForUpdate()->load(['rezervation.event', 'seat']);
+            $ticket = Ticket::where('id', $ticket->id)->lockForUpdate()->first();
+            $ticket->load(['rezervation.event', 'seat']);
 
             // Update ticket status
             $ticket->update(['status' => Ticket::STATUS_CANCELLED]);

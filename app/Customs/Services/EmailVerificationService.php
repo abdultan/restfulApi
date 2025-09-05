@@ -20,7 +20,8 @@ class EmailVerificationService{
         }
 
         $token = Str::uuid();
-        $url = config('app.url') . "?token=" . $token . "&email=" . $email;
+        $frontend = rtrim(config('app.frontend_url', config('app.url')), '/');
+        $url = $frontend . "/verify-email?token=" . $token . "&email=" . urlencode($email);
 
         EmailVerificationToken::create([
             'email' => $email,

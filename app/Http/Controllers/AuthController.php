@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegistrationRequest;
-
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -16,7 +15,6 @@ use App\Http\Controllers\Controller;
 use App\Customs\Services\EmailVerificationService;
 use App\Http\Requests\VerifyEmailRequest;
 use App\Http\Requests\ResendEmailVerificationLinkRequest; 
-
 
 class AuthController extends Controller
 {
@@ -32,21 +30,21 @@ class AuthController extends Controller
                 'message'=> 'Invalid credentials'
             ],401);
         }
-        
     }
+
     /**
      * Resend verification link
      */
     public function resendEmailVerificationLink(ResendEmailVerificationLinkRequest $request){
         return $this->service->resendLink($request->email);
     }
+
     /** 
      * Verify user email
      */
     public function verifyUserEmail(VerifyEmailRequest $request){
         return $this->service->verifyEmail($request->email, $request->token);
     }
-
 
     public function register(RegistrationRequest $request){
         $data = $request->validated();
@@ -73,6 +71,17 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Return authenticated user's profile
+     */
+    public function profile(){
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User profile retrieved successfully',
+            'data' => auth()->user(),
+        ]);
+    }
+
     public function refresh(){
         try{
             $token = JWTAuth::getToken();
@@ -93,8 +102,8 @@ class AuthController extends Controller
     }
 
     public function logout(){
-            auth()->logout();
-            return response()->json([
+        auth()->logout();
+        return response()->json([
             'status'=> 'success',
             'message'=> 'User has been logged out successfully'
         ]);

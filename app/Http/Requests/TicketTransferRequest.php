@@ -24,7 +24,14 @@ class TicketTransferRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            'email' => ['required', 'email', 'exists:users,email'],
+            'note'  => ['nullable', 'string', 'max:500'],
+        ];
+    }
+    public function messages(): array
+    {
+        return [
+            'email.exists' => 'Bu email adresiyle kayıtlı kullanıcı bulunamadı.',
         ];
     }
 }

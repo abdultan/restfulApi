@@ -30,6 +30,7 @@ Route::prefix('auth')->group(function () {
         Route::post('logout', [AuthController::class, 'logout'])->middleware('throttle:api');
         Route::post('refresh', [AuthController::class, 'refresh'])->middleware('throttle:refresh');
         Route::post('resend-email-verification-link', [AuthController::class, 'resendEmailVerificationLink'])->middleware('throttle:resend-email');
+        Route::get('user', [AuthController::class, 'profile']);
     });
 
     Route::post('verify-email', [AuthController::class, 'verifyUserEmail'])->middleware('throttle:verify-email');
@@ -39,9 +40,10 @@ Route::prefix('auth')->group(function () {
 Route::get('events', [EventController::class, 'index']);
 Route::get('events/{event}', [EventController::class, 'show']);
 
+Route::get('events/{id}/seats', [SeatController::class, 'byEvent']);
+Route::get('venues/{id}/seats', [SeatController::class, 'byVenue']);
+
 Route::middleware(['auth:api'])->group(function () {
-    Route::get('events/{id}/seats', [SeatController::class, 'byEvent']);
-    Route::get('venues/{id}/seats', [SeatController::class, 'byVenue']);
     Route::post('seats/block',[SeatController::class,'block']);
     Route::delete('seats/release',[SeatController::class,'release']);
 });
@@ -56,9 +58,14 @@ Route::middleware('admin')->group(function () {
     Route::put('venues/{venue}', [VenueController::class,'update']);
 });
 
-Route::post('rezervations', [RezervationController::class,'store']);
-Route::post('rezervations/{id}/confirm', [RezervationController::class, 'confirm']);
-Route::apiResource('rezervations', RezervationController::class)->only(['index','show','destroy']);
+Route::get('venues', [VenueController::class, 'index']);
+Route::get('venues/{venue}', [VenueController::class, 'show']);
+
+Route::middleware(['auth:api'])->group(function () {
+    Route::post('rezervations', [RezervationController::class,'store']);
+    Route::post('rezervations/{id}/confirm', [RezervationController::class, 'confirm']);
+    Route::apiResource('rezervations', RezervationController::class)->only(['index','show','destroy']);
+});
 
 Route::middleware(['auth:api'])->group(function () {
     Route::get('tickets', [TicketController::class, 'index']);
